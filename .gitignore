@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.pyo
+.mac_state.json
+*.egg-info/
+.env

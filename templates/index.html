@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WiFi Scanner Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">📡</div>
+    WiFi Scanner Pro
+  </div>
+  <div class="header-right">
+    <div class="admin-badge {% if admin %}yes{% else %}no{% endif %}">
+      <div class="dot {% if admin %}pulse{% endif %}"></div>
+      {% if admin %}Administrador{% else %}Sin admin (MAC limitada){% endif %}
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-tab="overview">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Overview
+    </button>
+    <button class="tab" data-tab="networks">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      Redes WiFi
+    </button>
+    <button class="tab" data-tab="channels">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Canales
+    </button>
+    <button class="tab" data-tab="devices">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Dispositivos
+    </button>
+    <button class="tab" data-tab="mac">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      MAC Tools
+    </button>
+  </div>
+
+  <!-- ── OVERVIEW ─────────────────────────── -->
+  <div class="tab-pane active" id="pane-overview">
+    <div class="stack">
+
+      <div class="section-header">
+        <div>
+          <div class="section-title">Panel Principal</div>
+          <div class="section-sub">Estado de tu conexión y métricas rápidas</div>
+        </div>
+      </div>
+
+      <!-- Connection card -->
+      <div class="connection-card" id="conn-card">
+        <div class="loading-state"><div class="spinner"></div> Detectando conexión...</div>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="grid-4">
+        <div class="stat-card">
+          <div class="stat-label">Redes detectadas</div>
+          <div class="stat-value" id="stat-nets">—</div>
+          <div class="stat-sub">en tu entorno</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Dispositivos LAN</div>
+          <div class="stat-value" id="stat-devs">—</div>
+          <div class="stat-sub">en la red local</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Señal actual</div>
+          <div class="stat-value" id="stat-sig" style="color:var(--primary)">—</div>
+          <div class="stat-sub">intensidad WiFi</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Canal actual</div>
+          <div class="stat-value" id="stat-ch">—</div>
+          <div class="stat-sub">frecuencia activa</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── NETWORKS ──────────────────────────── -->
+  <div class="tab-pane" id="pane-networks">
+    <div class="stack">
+
+      <div class="section-header">
+        <div>
+          <div class="section-title">Redes WiFi Cercanas</div>
+          <div class="section-sub" id="net-count">Haz clic en Escanear para detectar redes</div>
+        </div>
+        <button class="btn btn-primary" id="btn-scan-networks">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Escanear redes
+        </button>
+      </div>
+
+      <div id="networks-error" class="error-banner"></div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-sort="ssid">SSID ↕</th>
+                <th>BSSID</th>
+                <th data-sort="signal">Señal ↕</th>
+                <th data-sort="channel">Canal ↕</th>
+                <th data-sort="security">Seguridad ↕</th>
+                <th>Auth</th>
+                <th>Radio</th>
+              </tr>
+            </thead>
+            <tbody id="networks-body">
+              <tr><td colspan="7">
+                <div class="empty">
+                  <div class="empty-icon">📡</div>
+                  <div class="empty-title">Sin datos</div>
+                  <div class="empty-sub">Haz clic en "Escanear redes" para comenzar</div>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── CHANNELS ──────────────────────────── -->
+  <div class="tab-pane" id="pane-channels">
+    <div class="stack">
+
+      <div class="section-header">
+        <div>
+          <div class="section-title">Análisis de Canales</div>
+          <div class="section-sub">Congestión del espectro WiFi en tu área</div>
+        </div>
+        <button class="btn btn-primary" id="btn-scan-channels">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Analizar canales
+        </button>
+      </div>
+
+      <div id="channels-content">
+        <div class="empty">
+          <div class="empty-icon">📊</div>
+          <div class="empty-title">Sin análisis</div>
+          <div class="empty-sub">Haz clic en "Analizar canales" para ver la saturación del espectro</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── DEVICES ───────────────────────────── -->
+  <div class="tab-pane" id="pane-devices">
+    <div class="stack">
+
+      <div class="section-header">
+        <div>
+          <div class="section-title">Dispositivos en la Red</div>
+          <div class="section-sub" id="dev-count">Dispositivos descubiertos via ARP</div>
+        </div>
+        <button class="btn btn-primary" id="btn-scan-devices">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Descubrir dispositivos
+        </button>
+      </div>
+
+      <div id="devices-error" class="error-banner"></div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>IP</th>
+                <th>MAC Address</th>
+                <th>Hostname</th>
+                <th>Tipo</th>
+              </tr>
+            </thead>
+            <tbody id="devices-body">
+              <tr><td colspan="5">
+                <div class="empty">
+                  <div class="empty-icon">🔍</div>
+                  <div class="empty-title">Sin dispositivos</div>
+                  <div class="empty-sub">Haz clic en "Descubrir dispositivos" para escanear la red local</div>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── MAC TOOLS ─────────────────────────── -->
+  <div class="tab-pane" id="pane-mac">
+    <div class="stack">
+
+      <div class="section-header">
+        <div>
+          <div class="section-title">MAC Address Tools</div>
+          <div class="section-sub">Gestión de identidad de red del adaptador WiFi</div>
+        </div>
+      </div>
+
+      <div id="mac-content">
+        <div class="empty">
+          <div class="empty-icon">🛡️</div>
+          <div class="empty-title">Cargando...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
